@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string", "description": "User's full name" },
+        "email": { "type": "string", "format": "email", "description": "User's email address" },
+        "role": { "type": "string", "enum": ["user", "admin"], "description": "User's role" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" }
+      },
+      "required": ["fullName", "email", "role", "createdAt"]
+    },
+    "Profile": {
+      "title": "Profile",
+      "description": "Digital complementary card profile",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner's user ID" },
+        "name": { "type": "string", "description": "Profile name" },
+        "title": { "type": "string", "description": "Professional title" },
+        "company": { "type": "string", "description": "Company name" },
+        "bio": { "type": "string", "description": "Short biography" },
+        "email": { "type": "string", "format": "email", "description": "Contact email" },
+        "phone": { "type": "string", "description": "Contact phone" },
+        "website": { "type": "string", "description": "Website URL" },
+        "socialLinks": { "type": "object", "description": "Social media links" },
+        "theme": { "type": "string", "description": "Profile theme color" },
+        "qrCode": { "type": "string", "description": "QR code data URL" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "name", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User private data"
+    },
+    "/profiles/{profileId}": {
+      "schema": "Profile",
+      "description": "Publicly shareable profiles"
+    }
+  }
+}

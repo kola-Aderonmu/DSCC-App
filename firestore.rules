@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches auth.uid)
+    // Fields:
+    //   - fullName: string (required, 1-100 chars)
+    //   - email: string (required, valid email)
+    //   - role: string (required, 'user' or 'admin')
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: profiles
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required, matches auth.uid)
+    //   - name: string (required, 1-100 chars)
+    //   - title: string (optional, 1-100 chars)
+    //   - company: string (optional, 1-100 chars)
+    //   - bio: string (optional, 1-500 chars)
+    //   - email: string (optional, valid email)
+    //   - phone: string (optional, 1-20 chars)
+    //   - website: string (optional, valid URL)
+    //   - theme: string (optional, 1-20 chars)
+    //   - qrCode: string (optional, data URL)
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    // Domain Validators
+    function isValidUser(data) {
+      return data.keys().hasAll(['fullName', 'email', 'role', 'createdAt']) &&
+             data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 100 &&
+             isValidEmail(data.email) &&
+             data.role in ['user', 'admin'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidProfile(data) {
+      return data.keys().hasAll(['userId', 'name', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             (!('email' in data) || isValidEmail(data.email)) &&
+             (!('website' in data) || isValidUrl(data.website)) &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == 'user';
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role;
+    }
+
+    match /profiles/{profileId} {
+      // Profiles are publicly readable for sharing
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidProfile(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidProfile(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
