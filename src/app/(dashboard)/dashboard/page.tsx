@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
-import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy, deleteDoc, doc } from "firebase/firestore";
 import Link from "next/link";
-import { Plus, User, ExternalLink, QrCode, MoreVertical, Trash2, Edit, Sparkles } from "lucide-react";
+import { Plus, User, ExternalLink, QrCode, MoreVertical, Trash2, Edit, Sparkles, AlertTriangle, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Profile {
@@ -19,6 +19,8 @@ interface Profile {
 export default function DashboardPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -57,6 +59,31 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, []);
 
+  const handleDelete = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
+    try {
+      await deleteDoc(doc(db, "profiles", deletingId));
+      setDeletingId(null);
+    } catch (error: any) {
+      console.error("Error deleting profile:", error);
+      
+      const errInfo = {
+        error: error instanceof Error ? error.message : String(error),
+        authInfo: {
+          userId: auth.currentUser?.uid,
+          email: auth.currentUser?.email,
+        },
+        operationType: 'delete',
+        path: `profiles/${deletingId}`
+      };
+      console.error('Firestore Error: ', JSON.stringify(errInfo));
+      alert("Failed to delete card. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -77,10 +104,10 @@ export default function DashboardPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             Your Digital Cards <Sparkles className="h-5 w-5 text-amber-400" />
           </h2>
-          <p className="text-slate-500">Manage and share your smart contact profiles.</p>
+          <p className="text-slate-500 italic">Manage and share your smart contact profiles.</p>
         </div>
         <motion.div
           whileHover={{ scale: 1.05 }}
@@ -88,9 +115,9 @@ export default function DashboardPage() {
         >
           <Link
             href="/profiles/new"
-            className="flex items-center gap-2 rounded-full bg-[#36c1bf] px-6 py-3 font-semibold text-white shadow-lg shadow-[#36c1bf]/20 transition hover:bg-[#29aeb2]"
+            className="flex items-center gap-2 rounded-full bg-[#36c1bf] px-2 py-1 font-meduim text-white shadow-lg shadow-[#36c1bf]/20 transition hover:bg-[#29aeb2]"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-3 w-3" />
             Create New Card
           </Link>
         </motion.div>
@@ -160,6 +187,14 @@ export default function DashboardPage() {
                       <ExternalLink className="h-5 w-5" />
                     </Link>
                   </motion.div>
+                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                    <button
+                      onClick={() => setDeletingId(profile.id)}
+                      className="rounded-full p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  </motion.div>
                 </div>
               </div>
 
@@ -185,6 +220,61 @@ export default function DashboardPage() {
           ))}
         </motion.div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deletingId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isDeleting && setDeletingId(null)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-6 rounded-3xl bg-rose-50 p-4 text-rose-500">
+                  <AlertTriangle className="h-10 w-10" />
+                </div>
+                <h3 className="mb-2 text-xl font-black text-slate-800">Delete this card?</h3>
+                <p className="mb-8 text-slate-500">
+                  This action cannot be undone. All information associated with this digital card will be permanently removed.
+                </p>
+                <div className="flex w-full gap-3">
+                  <button
+                    disabled={isDeleting}
+                    onClick={() => setDeletingId(null)}
+                    className="flex-1 rounded-2xl border border-slate-100 py-4 font-bold text-slate-500 transition hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={isDeleting}
+                    onClick={handleDelete}
+                    className="flex-1 rounded-2xl bg-rose-500 py-4 font-bold text-white shadow-lg shadow-rose-500/20 transition hover:bg-rose-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isDeleting ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="h-5 w-5 rounded-full border-2 border-white border-t-transparent"
+                      />
+                    ) : (
+                      "Delete Card"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
