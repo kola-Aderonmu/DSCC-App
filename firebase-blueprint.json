@@ -7,6 +7,8 @@
       "properties": {
         "fullName": { "type": "string", "description": "User's full name" },
         "email": { "type": "string", "format": "email", "description": "User's email address" },
+        "photoURL": { "type": "string", "description": "User's profile picture URL or Base64" },
+        "whatsapp": { "type": "string", "description": "User's WhatsApp number" },
         "role": { "type": "string", "enum": ["user", "admin"], "description": "User's role" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" }
       },
@@ -24,7 +26,9 @@
         "bio": { "type": "string", "description": "Short biography" },
         "email": { "type": "string", "format": "email", "description": "Contact email" },
         "phone": { "type": "string", "description": "Contact phone" },
+        "whatsapp": { "type": "string", "description": "WhatsApp number" },
         "website": { "type": "string", "description": "Website URL" },
+        "cardDesign": { "type": "string", "enum": ["modern", "classic", "creative"], "description": "Selected card design template" },
         "socialLinks": { "type": "object", "description": "Social media links" },
         "theme": { "type": "string", "description": "Profile theme color" },
         "qrCode": { "type": "string", "description": "QR code data URL" },
