@@ -35,20 +35,23 @@ export default function PublicProfilePage() {
   const [isMounted, setIsMounted] = useState(false);
 
   const generateVCard = (p: Profile) => {
+    const whatsappClean = p.whatsapp ? p.whatsapp.replace(/\D/g, "") : "";
     const vcard = [
       "BEGIN:VCARD",
       "VERSION:3.0",
-      `FN:View Virtual Complimentary card (${p.phone})`,
+      `FN:${p.name}`,
       `N:${p.name.split(" ").reverse().join(";")};;;`,
       `ORG:${p.company}`,
-      `TITLE:CLICK TO VIEW CARD: ${shareUrl}`,
-      `TEL;TYPE=CELL:${p.phone}`,
+      `TITLE:${p.title}`,
+      `TEL;TYPE=CELL,VOICE:${p.phone}`,
       p.whatsapp ? `TEL;TYPE=WORK,VOICE:${p.whatsapp}` : "",
-      `EMAIL:${p.email}`,
+      `EMAIL;TYPE=INTERNET,HOME:${p.email}`,
+      p.whatsapp ? `X-SOCIALPROFILE;TYPE=whatsapp:https://wa.me/${whatsappClean}` : "",
+      p.whatsapp ? `URL;TYPE=WhatsApp:https://wa.me/${whatsappClean}` : "",
       `URL;TYPE=WORK:${shareUrl}`,
       `item1.URL:${shareUrl}`,
-      `item1.X-ABLabel:COPY LINK AND PASTE IN YOUR BROWSER TO VIEW VIRTUAL CARD`,
-      `NOTE:Click the link above to view your high-fidelity virtual card: ${shareUrl}`,
+      `item1.X-ABLabel:VIEW VIRTUAL CARD`,
+      `NOTE:Digital Smart Card: ${shareUrl}`,
       `ADR:;;${p.location};;;;`,
       "END:VCARD"
     ].filter(Boolean).join("\n");
@@ -334,12 +337,12 @@ export default function PublicProfilePage() {
                   <Mail className="h-5 w-5" />
                 </div>
                 <div className="text-left">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Email</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Send email</p>
                   <p className="font-medium text-slate-700">{profile.email}</p>
                 </div>
               </motion.a>
             )}
-            {profile.whatsapp && (
+            {profile.whatsapp && profile.whatsapp.trim() !== "" && (
               <motion.a 
                 variants={{ hidden: { opacity: 0, x: -20 }, show: { opacity: 1, x: 0 } }}
                 href={`https://wa.me/${profile.whatsapp.replace(/\D/g, "")}`} 
@@ -351,7 +354,7 @@ export default function PublicProfilePage() {
                   <MessageSquare className="h-5 w-5" />
                 </div>
                 <div className="text-left">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">WhatsApp</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Chat on whatsapp:</p>
                   <p className="font-medium text-slate-700">{profile.whatsapp}</p>
                 </div>
               </motion.a>
@@ -366,7 +369,7 @@ export default function PublicProfilePage() {
                   <Phone className="h-5 w-5" />
                 </div>
                 <div className="text-left">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Phone</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Call</p>
                   <p className="font-medium text-slate-700">{profile.phone}</p>
                 </div>
               </motion.a>

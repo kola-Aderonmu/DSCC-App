@@ -230,6 +230,14 @@ function DashboardContent() {
                       </Link>
                     </motion.div>
                     <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Link
+                        href={`/profiles/${profile.id}/edit`}
+                        className="rounded-full p-2 text-slate-400 hover:bg-slate-50 hover:text-amber-500 transition"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </Link>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <button
                         onClick={() => setDeletingId(profile.id)}
                         className="rounded-full p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition"
