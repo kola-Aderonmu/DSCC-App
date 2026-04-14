@@ -23,17 +23,16 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  AreaChart,
-  Area
-} from "recharts";
+import dynamic from "next/dynamic";
+
+// Dynamically import Recharts to prevent SSR issues
+const AreaChart = dynamic(() => import("recharts").then((mod) => mod.AreaChart), { ssr: false });
+const Area = dynamic(() => import("recharts").then((mod) => mod.Area), { ssr: false });
+const XAxis = dynamic(() => import("recharts").then((mod) => mod.XAxis), { ssr: false });
+const YAxis = dynamic(() => import("recharts").then((mod) => mod.YAxis), { ssr: false });
+const CartesianGrid = dynamic(() => import("recharts").then((mod) => mod.CartesianGrid), { ssr: false });
+const Tooltip = dynamic(() => import("recharts").then((mod) => mod.Tooltip), { ssr: false });
+const ResponsiveContainer = dynamic(() => import("recharts").then((mod) => mod.ResponsiveContainer), { ssr: false });
 
 interface Activity {
   id: string;
@@ -55,9 +54,11 @@ export default function AdminDashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    setIsMounted(true);
     async function checkAdminAndFetchStats() {
       if (!auth.currentUser) {
         router.push("/login");
@@ -236,57 +237,63 @@ export default function AdminDashboardPage() {
             </div>
             
             <div className="h-[350px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.chartData}>
-                  <defs>
-                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#36c1bf" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#36c1bf" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorCards" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 12, fontWeight: 700, fill: '#94a3b8' }}
-                    dy={10}
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 12, fontWeight: 700, fill: '#94a3b8' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: '20px', 
-                      border: 'none', 
-                      boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-                      padding: '15px'
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="users" 
-                    stroke="#36c1bf" 
-                    strokeWidth={4}
-                    fillOpacity={1} 
-                    fill="url(#colorUsers)" 
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="cards" 
-                    stroke="#6366f1" 
-                    strokeWidth={4}
-                    fillOpacity={1} 
-                    fill="url(#colorCards)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {isMounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={stats.chartData}>
+                    <defs>
+                      <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#36c1bf" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#36c1bf" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorCards" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fontWeight: 700, fill: '#94a3b8' }}
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fontWeight: 700, fill: '#94a3b8' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        borderRadius: '20px', 
+                        border: 'none', 
+                        boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                        padding: '15px'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="users" 
+                      stroke="#36c1bf" 
+                      strokeWidth={4}
+                      fillOpacity={1} 
+                      fill="url(#colorUsers)" 
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="cards" 
+                      stroke="#6366f1" 
+                      strokeWidth={4}
+                      fillOpacity={1} 
+                      fill="url(#colorCards)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-slate-50 rounded-2xl">
+                  <p className="text-xs font-bold text-slate-400">Loading analytics...</p>
+                </div>
+              )}
             </div>
           </motion.div>
 

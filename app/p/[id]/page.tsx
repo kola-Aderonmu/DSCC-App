@@ -34,7 +34,7 @@ export default function PublicProfilePage() {
   const [isOwner, setIsOwner] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  const generateVCard = (p: Profile) => {
+  const generateVCard = (p: Profile, sUrl: string) => {
     const whatsappClean = p.whatsapp ? p.whatsapp.replace(/\D/g, "") : "";
     const vcard = [
       "BEGIN:VCARD",
@@ -48,10 +48,10 @@ export default function PublicProfilePage() {
       `EMAIL;TYPE=INTERNET,HOME:${p.email}`,
       p.whatsapp ? `X-SOCIALPROFILE;TYPE=whatsapp:https://wa.me/${whatsappClean}` : "",
       p.whatsapp ? `URL;TYPE=WhatsApp:https://wa.me/${whatsappClean}` : "",
-      `URL;TYPE=WORK:${shareUrl}`,
-      `item1.URL:${shareUrl}`,
+      `URL;TYPE=WORK:${sUrl}`,
+      `item1.URL:${sUrl}`,
       `item1.X-ABLabel:VIEW VIRTUAL CARD`,
-      `NOTE:Digital Smart Card: ${shareUrl}`,
+      `NOTE:Digital Smart Card: ${sUrl}`,
       `ADR:;;${p.location};;;;`,
       "END:VCARD"
     ].filter(Boolean).join("\n");
@@ -143,8 +143,8 @@ export default function PublicProfilePage() {
     );
   }
 
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?view=card` : "";
-  const vCardData = profile ? generateVCard(profile) : "";
+  const shareUrl = isMounted ? `${window.location.origin}${window.location.pathname}?view=card` : "";
+  const vCardData = profile ? generateVCard(profile, shareUrl) : "";
 
   const renderPhysicalCard = () => {
     if (!profile) return null;
@@ -421,13 +421,17 @@ export default function PublicProfilePage() {
               whileHover={{ scale: 1.05, rotate: 2 }}
               className="mx-auto inline-block rounded-3xl bg-white p-6 shadow-sm"
             >
-              <QRCodeSVG 
-                value={vCardData} 
-                size={200}
-                fgColor={profile.theme || "#36c1bf"}
-                level="M"
-                includeMargin={false}
-              />
+              {isMounted && vCardData ? (
+                <QRCodeSVG 
+                  value={vCardData} 
+                  size={200}
+                  fgColor={profile.theme || "#36c1bf"}
+                  level="M"
+                  includeMargin={false}
+                />
+              ) : (
+                <div className="h-[200px] w-[200px] bg-slate-100 animate-pulse rounded-xl" />
+              )}
             </motion.div>
             <div className="mt-8 flex justify-center gap-4">
               <motion.button 

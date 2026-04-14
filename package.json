@@ -20,7 +20,7 @@
     "framer-motion": "^11.11.17",
     "lucide-react": "^1.8.0",
     "nanoid": "^5.1.6",
-    "next": "15.1.6",
+    "next": "^15.1.7",
     "pg": "^8.20.0",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
@@ -38,7 +38,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.1.6",
+    "eslint-config-next": "^15.1.7",
     "prisma": "^7.5.0",
     "tailwindcss": "^4",
     "typescript": "^5"
